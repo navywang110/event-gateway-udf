@@ -135,8 +135,8 @@ public class SftpUtil {
                     ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry)dir.firstElement();
                     if(System.currentTimeMillis()/1000 - entry.getAttrs().getMTime() > 60) {//修改时间超过了一分钟
                         //rename
-                        channelSftp.rename(file, file+ ".bak");
-
+                        String parDir = file.substring(0, file.lastIndexOf("/"));
+                        channelSftp.rename(parDir + "/" + entry.getFilename(), parDir + "/" + entry.getFilename() + ".bak");
                         return true;
                     }else{
                         return false;
@@ -162,6 +162,8 @@ public class SftpUtil {
 
     public static void main(String[] args){
         Map<ChannelSftp.LsEntry,String> finalPaths = new HashMap<ChannelSftp.LsEntry,String>();
+        checkSpecialed("merce", "merce", "info2", "22","/home/merce/20200521/*.chk");
+
         isExist("merce", "merce", "info2", "22", "/home/merce/20200521", ".csv", finalPaths);
         List<ChannelSftp.LsEntry> fileList = new ArrayList<ChannelSftp.LsEntry>(finalPaths.keySet());
         Collections.sort(fileList, new Comparator<ChannelSftp.LsEntry>(){

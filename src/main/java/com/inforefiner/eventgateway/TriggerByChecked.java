@@ -78,7 +78,7 @@ public class TriggerByChecked
         this.dateFunction = props.getProperty("dateFunction");
         this.pathSuffix = props.getProperty("pathSuffix");
         this.flagFile = props.getProperty("flagFile");
-        logger.info("host {}, port {}, filepath {}, dateFormat {}, dateFunction {}, pathSuffix {}", host, port, filePath, dateFormat, dateFunction, pathSuffix);
+        logger.info("host {}, port {}, filepath {}, dateFormat {}, dateFunction {}, pathSuffix {}, flagFile {}", host, port, filePath, dateFormat, dateFunction, pathSuffix, flagFile);
     }
 
     public void execute(Map<String, Map<String, List<String>>> map, ProcessOutCollector collector) {
@@ -87,21 +87,20 @@ public class TriggerByChecked
             String timeStr = null;
             String path = null;
             Map<ChannelSftp.LsEntry,String> finalPaths = new HashMap<ChannelSftp.LsEntry,String>();
-            if("today".equals(this.dateFunction)){
+            if(dateFunction != null && "today".equals(dateFunction.trim())){
                 timeStr = new SimpleDateFormat(this.dateFormat).format(calendar.getTime());
-                path = this.filePath + "/" + timeStr;
-
-            }else if("yesterday".equals(this.dateFunction)){
+                path = filePath + "/" + timeStr;
+            }else if(dateFunction != null && "yesterday".equals(dateFunction)){
                 calendar.set(Calendar.DAY_OF_YEAR, calendar.get(Calendar.DAY_OF_YEAR) - 1);
                 timeStr = new SimpleDateFormat(this.dateFormat).format(calendar.getTime());
-                path = this.filePath + "/" + timeStr;
+                path = filePath + "/" + timeStr;
             }else{
-                path = this.filePath;
+                path = filePath;
             }
             logger.info("go to check path {}", path);
 
 
-            boolean specialed = SftpUtil.checkSpecialed(this.user, this.password, this.host, this.port, path + "/" + this.flagFile);
+            boolean specialed = SftpUtil.checkSpecialed(this.user, this.password, this.host, this.port, path + "/" + flagFile);
 
             if(specialed){
                 boolean isExist = SftpUtil.isExist(this.user, this.password, this.host, this.port, path, pathSuffix, finalPaths);
@@ -118,9 +117,9 @@ public class TriggerByChecked
                         }
                         Map params = new HashMap();
                         params.put("eventStepInputPath", StringUtils.join(arr, ","));
-                        this.logger.info("TriggerByChecked executing, filePath = {}, params = {}", path, params);
+                        logger.info("TriggerByChecked executing, filePath = {}, params = {}", path, params);
                         collector.emit(params, map);
-                        this.logger.info("TriggerByChecked execute done, filePath = {}, totalLength = {}", this.filePath, arr.length);
+                        logger.info("TriggerByChecked execute done, filePath = {}, totalLength = {}", path, arr.length);
                     }
                 }
             }
