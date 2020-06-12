@@ -1,0 +1,24 @@
+一. TriggerDataflow参数举例：
+filePath = /home/merce/MME/20191015
+lastEmit = 20191015061215  //最后新增文件名称
+
+
+二. TriggerSftpFlow参数举例：
+pathPrefix= sftp://info2:22/home/merce  //必填
+pathSuffix = .csv //必填
+user = merce  //必填
+password = merce  //必填
+dateFormat = yyyyMMdd  //非必填，该参数为动态识别该目录下递增的文件
+dateFunction = today  //目前仅支持today 和 yesterday, 非必填
+lastEmit = 15 //待处理文件的按时间排序后的下标索引,等于已经处理文件的个数-1, 非必填
+
+
+三. TriggerByChecked参数举例:
+pathPrefix= sftp://info2:22/home/merce  //必填
+pathSuffix = .csv
+user = merce
+password = merce
+dateFormat = yyyyMMdd  //非必填，该参数为动态识别该目录下递增的文件
+dateFunction = today  //目前仅支持today 和 yesterday, 非必填
+flagFile = checked.complete   //文件传输完毕的标志文件
+

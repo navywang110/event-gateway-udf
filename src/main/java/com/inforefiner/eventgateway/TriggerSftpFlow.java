@@ -68,7 +68,11 @@ public class TriggerSftpFlow
         this.dateFormat = props.getProperty("dateFormat");
         this.dateFunction = props.getProperty("dateFunction");
         this.pathSuffix = props.getProperty("pathSuffix");
-        lastEmit = -1;
+        if(props.getProperty("lastEmit") != null){
+            lastEmit = Integer.valueOf(props.getProperty("lastEmit"));
+        }else {
+            lastEmit = -1;
+        }
         logger.info("host {}, port {}, filepath {}, dateFormat {}, dateFunction {}, pathSuffix {}", host, port, filePath, dateFormat, dateFunction, pathSuffix);
     }
 
