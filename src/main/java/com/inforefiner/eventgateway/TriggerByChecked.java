@@ -100,30 +100,44 @@ public class TriggerByChecked
             logger.info("go to check path {}", path);
 
 
-            boolean specialed = SftpUtil.checkSpecialed(this.user, this.password, this.host, this.port, path + "/" + flagFile);
+            String chkPath = SftpUtil.checkSpecialed(this.user, this.password, this.host, this.port, path + "/" + flagFile);
 
-            if(specialed){
+            if(chkPath != null){
                 boolean isExist = SftpUtil.isExist(this.user, this.password, this.host, this.port, path, pathSuffix, finalPaths);
                 if(!isExist) {
-                    logger.warn("path " + path + " doesn't exist.");
+                    logger.warn("Under path " + path  +  ", pathSuffix " + pathSuffix + " doesn't exist.");
                 }else{
                     if(finalPaths.size() > 0) {
-                        Object[] toEmit = finalPaths.values().toArray();
-                        logger.info("found files: {}", Arrays.toString(finalPaths.values().toArray()));
-                        logger.info("TriggerByChecked execute, filePath = {}, fileList = {}, start = {}, end = {}", new Object[] { path, finalPaths.values().toArray(), 0, finalPaths.size()});
-                        String[] arr = new String[toEmit.length];
-                        for (int i = 0; i < arr.length; i++) {
-                            arr[i] = "sftp://"+this.host+":"+this.port + (String)toEmit[i];
+                        boolean updateFlag = false;
+                        try {
+                            Object[] toEmit = finalPaths.values().toArray();
+                            logger.info("found files: {}", Arrays.toString(finalPaths.values().toArray()));
+                            logger.info("TriggerByChecked execute, filePath = {}, fileList = {}, start = {}, end = {}", new Object[] { path, finalPaths.values().toArray(), 0, finalPaths.size()});
+                            String[] arr = new String[toEmit.length];
+                            for (int i = 0; i < arr.length; i++) {
+                                arr[i] = "sftp://"+this.host+":"+this.port + (String)toEmit[i];
+                            }
+                            Map params = new HashMap();
+                            params.put("eventStepInputPath", StringUtils.join(arr, ","));
+                            logger.info("TriggerByChecked executing, filePath = {}, params = {}", path, params);
+                            collector.emit(params, map);
+                            updateFlag = true;
+                            logger.info("TriggerByChecked execute done, filePath = {}, totalLength = {}", path, arr.length);
+                        }catch (Exception e){
+                            //还原.chk文件
+                            logger.error("send request to df-executor error:", e);
+                            SftpUtil.rename(this.user, this.password, this.host, this.port, chkPath+".bak", chkPath);
+                        }finally {
+                            if(!updateFlag){
+                                logger.error("check file failed, and rename again {}", chkPath);
+                                SftpUtil.rename(this.user, this.password, this.host, this.port, chkPath+".bak", chkPath);
+                            }
                         }
-                        Map params = new HashMap();
-                        params.put("eventStepInputPath", StringUtils.join(arr, ","));
-                        logger.info("TriggerByChecked executing, filePath = {}, params = {}", path, params);
-                        collector.emit(params, map);
-                        logger.info("TriggerByChecked execute done, filePath = {}, totalLength = {}", path, arr.length);
                     }
                 }
+            }else{
+                logger.info("not found check file {}", path + "/" + flagFile);
             }
-
         } catch (Exception e) {
             logger.error("execute exception : ", e);
         }
