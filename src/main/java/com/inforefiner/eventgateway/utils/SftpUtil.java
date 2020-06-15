@@ -121,7 +121,16 @@ public class SftpUtil {
         }
     }
 
-    public static boolean checkSpecialed(String username,String password,String host,String port, String file){
+    /**
+     *
+     * @param username
+     * @param password
+     * @param host
+     * @param port
+     * @param file
+     * @return check文件全路径
+     */
+    public static String checkSpecialed(String username,String password,String host,String port, String file){
         ChannelSftp channelSftp = null;
         try {
             // 一、 获取channelSftp对象
@@ -130,20 +139,52 @@ public class SftpUtil {
             try {
                 Vector dir = channelSftp.ls(file);
                 if (dir == null || dir.isEmpty()) {
-                    return false;
+                    return null;
                 }else{
                     ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry)dir.firstElement();
                     if(System.currentTimeMillis()/1000 - entry.getAttrs().getMTime() > 60) {//修改时间超过了一分钟
                         //用rename保证原子性操作,保证多线程安全性
                         String parDir = file.substring(0, file.lastIndexOf("/"));
                         channelSftp.rename(parDir + "/" + entry.getFilename(), parDir + "/" + entry.getFilename() + ".bak");
-                        return true;
+                        return parDir + "/" + entry.getFilename();
                     }else{
-                        return false;
+                        return null;
                     }
                 }
             } catch (SftpException e) { // 如果dstDirPath不存在，则会报错，此时捕获异常并创建dstDirPath路径
                 log.error("dstPath {} doesn't exist", file);
+                return null;
+            }
+        }catch (Exception e){
+            throw new RuntimeException("create channel exception: ", e);
+        }  finally {
+            // 处理后事
+            if (channelSftp != null)
+                channelSftp.quit();
+            try {
+                closeChannel();
+            } catch (Exception e) {
+                log.error("closeChannel exception",e);
+            }
+        }
+    }
+
+    public static boolean rename(String username,String password,String host,String port, String srcFile,String dstFile){
+        ChannelSftp channelSftp = null;
+        try {
+            // 一、 获取channelSftp对象
+            channelSftp = getChannel(username, password, host, port);
+            // 二、 判断远程路径dstDirPath是否存在(通道配置的路径)
+            try {
+                Vector dir = channelSftp.ls(srcFile);
+                if (dir == null || dir.isEmpty()) {
+                    return false;
+                }else{
+                    channelSftp.rename(srcFile, dstFile);
+                    return true;
+                }
+            } catch (SftpException e) { // 如果dstDirPath不存在，则会报错，此时捕获异常并创建dstDirPath路径
+                log.error("rename " + srcFile+ " error : ", e);
                 return false;
             }
         }catch (Exception e){
