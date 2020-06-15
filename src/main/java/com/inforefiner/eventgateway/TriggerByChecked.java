@@ -100,10 +100,10 @@ public class TriggerByChecked
             logger.info("go to check path {}", path);
 
 
-            String chkPath = SftpUtil.checkSpecialed(this.user, this.password, this.host, this.port, path + "/" + flagFile);
-
+            String chkPath = new SftpUtil().checkSpecialed(this.user, this.password, this.host, this.port, path + "/" + flagFile);
+            logger.info("TriggerByChecked chkPath {}", chkPath);
             if(chkPath != null){
-                boolean isExist = SftpUtil.isExist(this.user, this.password, this.host, this.port, path, pathSuffix, finalPaths);
+                boolean isExist = new SftpUtil().isExist(this.user, this.password, this.host, this.port, path, pathSuffix, finalPaths);
                 if(!isExist) {
                     logger.warn("Under path " + path  +  ", pathSuffix " + pathSuffix + " doesn't exist.");
                 }else{
@@ -126,11 +126,11 @@ public class TriggerByChecked
                         }catch (Exception e){
                             //还原.chk文件
                             logger.error("send request to df-executor error:", e);
-                            SftpUtil.rename(this.user, this.password, this.host, this.port, chkPath+".bak", chkPath);
+                            new SftpUtil().rename(this.user, this.password, this.host, this.port, chkPath+".bak", chkPath);
                         }finally {
                             if(!updateFlag){
                                 logger.error("check file failed, and rename again {}", chkPath);
-                                SftpUtil.rename(this.user, this.password, this.host, this.port, chkPath+".bak", chkPath);
+                                new SftpUtil().rename(this.user, this.password, this.host, this.port, chkPath+".bak", chkPath);
                             }
                         }
                     }

@@ -27,11 +27,11 @@ import java.util.Vector;
 public class SftpUtil {
     static private final Logger log = LoggerFactory.getLogger(SftpUtil.class);
 
-    static private Session session = null;
-    static private Channel channel = null;
-    static private int timeout = 60000; //超时数,一分钟
+    private Session session = null;
+    private Channel channel = null;
+    private int timeout = 60000; //超时数,一分钟
 
-    public static ChannelSftp getChannel(String username, String password, String host, String port) throws JSchException {
+    public ChannelSftp getChannel(String username, String password, String host, String port) throws JSchException {
         JSch jsch = new JSch(); // 创建JSch对象
         // 根据用户名，主机ip，端口获取一个Session对象
         session = jsch.getSession(username, host, Integer.valueOf(port));
@@ -56,7 +56,7 @@ public class SftpUtil {
      * 关闭channel和session
      * @throws Exception
      */
-    public static void closeChannel() throws Exception {
+    public void closeChannel() throws Exception {
         if (channel != null) {
             channel.disconnect();
         }
@@ -65,7 +65,7 @@ public class SftpUtil {
         }
     }
 
-    public static boolean isExist(String username,String password,String host,String port, String path, String pathSuffix, Map<ChannelSftp.LsEntry,String> finalEntrys){
+    public boolean isExist(String username,String password,String host,String port, String path, String pathSuffix, Map<ChannelSftp.LsEntry,String> finalEntrys){
         ChannelSftp channelSftp = null;
         try {
             // 一、 获取channelSftp对象
@@ -103,7 +103,7 @@ public class SftpUtil {
                     return true;
                 }
             } catch (SftpException e) { // 如果dstDirPath不存在，则会报错，此时捕获异常并创建dstDirPath路径
-                log.error("dstPath {} doesn't exist", path);
+                log.error("isExist dstPath "+path+" doesn't exist", e);
                 return false;
             }
 
@@ -130,7 +130,7 @@ public class SftpUtil {
      * @param file
      * @return check文件全路径
      */
-    public static String checkSpecialed(String username,String password,String host,String port, String file){
+    public String checkSpecialed(String username,String password,String host,String port, String file){
         ChannelSftp channelSftp = null;
         try {
             // 一、 获取channelSftp对象
@@ -152,7 +152,7 @@ public class SftpUtil {
                     }
                 }
             } catch (SftpException e) { // 如果dstDirPath不存在，则会报错，此时捕获异常并创建dstDirPath路径
-                log.error("dstPath {} doesn't exist", file);
+                log.error("checkSpecialed dstPath "+file+" doesn't exist", e);
                 return null;
             }
         }catch (Exception e){
@@ -169,7 +169,7 @@ public class SftpUtil {
         }
     }
 
-    public static boolean rename(String username,String password,String host,String port, String srcFile,String dstFile){
+    public boolean rename(String username,String password,String host,String port, String srcFile,String dstFile){
         ChannelSftp channelSftp = null;
         try {
             // 一、 获取channelSftp对象
@@ -202,10 +202,11 @@ public class SftpUtil {
     }
 
     public static void main(String[] args){
+        SftpUtil sftp = new SftpUtil();
         Map<ChannelSftp.LsEntry,String> finalPaths = new HashMap<ChannelSftp.LsEntry,String>();
-        checkSpecialed("merce", "merce", "info2", "22","/home/merce/20200521/*.chk");
+        sftp.checkSpecialed("merce", "merce", "info2", "22","/home/merce/2020-06-14/*.chk");
 
-        isExist("merce", "merce", "info2", "22", "/home/merce/20200521", ".csv", finalPaths);
+        sftp.isExist("merce", "merce", "info2", "22", "/home/merce/20200521", ".csv", finalPaths);
         List<ChannelSftp.LsEntry> fileList = new ArrayList<ChannelSftp.LsEntry>(finalPaths.keySet());
         Collections.sort(fileList, new Comparator<ChannelSftp.LsEntry>(){
             @Override
