@@ -134,7 +134,7 @@ public class SftpUtil {
                 }else{
                     ChannelSftp.LsEntry entry = (ChannelSftp.LsEntry)dir.firstElement();
                     if(System.currentTimeMillis()/1000 - entry.getAttrs().getMTime() > 60) {//修改时间超过了一分钟
-                        //rename
+                        //用rename保证原子性操作,保证多线程安全性
                         String parDir = file.substring(0, file.lastIndexOf("/"));
                         channelSftp.rename(parDir + "/" + entry.getFilename(), parDir + "/" + entry.getFilename() + ".bak");
                         return true;
