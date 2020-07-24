@@ -110,6 +110,10 @@
                     <groupId>org.apache.curator</groupId>
                     <artifactId>curator-recipes</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.jcraft</groupId>
+                    <artifactId>jsch</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -160,6 +164,11 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.5</version>
             <!--<scope>provided</scope>-->
+        </dependency>
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.53</version>
         </dependency>
     </dependencies>
     <build>

@@ -94,7 +94,7 @@ public class TriggerSftpFlow
                 path = this.filePath;
             }
             logger.info("go to check path {}", path);
-            boolean isExist = new SftpUtil().isExist(this.user, this.password, this.host, this.port, path, pathSuffix, finalPaths);
+            boolean isExist = new SftpUtil().isExist(this.user, this.password, this.host, this.port, path, pathSuffix, null, finalPaths);
             if(!isExist) {
                 logger.warn("path " + path + " doesn't exist.");
             }else{

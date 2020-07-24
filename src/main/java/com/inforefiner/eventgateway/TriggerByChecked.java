@@ -9,12 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +31,7 @@ public class TriggerByChecked
     private String pathPrefix;
     private String dateFormat;//yyyyMMdd, yyyy-MM-dd
     private String dateFunction;//today,yesterday
+    private String bussinessPrefix;//业务类型
     private String pathSuffix;//.csv
     private String flagFile;//checked complete文件名称
 
@@ -78,7 +75,8 @@ public class TriggerByChecked
         this.dateFunction = props.getProperty("dateFunction");
         this.pathSuffix = props.getProperty("pathSuffix");
         this.flagFile = props.getProperty("flagFile");
-        logger.info("host {}, port {}, filepath {}, dateFormat {}, dateFunction {}, pathSuffix {}, flagFile {}", host, port, filePath, dateFormat, dateFunction, pathSuffix, flagFile);
+        this.bussinessPrefix = props.getProperty("bussinessPrefix");
+        logger.info("==host {}, port {}, filepath {}, dateFormat {}, dateFunction {}, pathSuffix {}, flagFile {}", host, port, filePath, dateFormat, dateFunction, pathSuffix, flagFile);
     }
 
     public void execute(Map<String, Map<String, List<String>>> map, ProcessOutCollector collector) {
@@ -99,11 +97,10 @@ public class TriggerByChecked
             }
             logger.info("go to check path {}", path);
 
-
             String chkPath = new SftpUtil().checkSpecialed(this.user, this.password, this.host, this.port, path + "/" + flagFile);
             logger.info("TriggerByChecked chkPath {}", chkPath);
             if(chkPath != null){
-                boolean isExist = new SftpUtil().isExist(this.user, this.password, this.host, this.port, path, pathSuffix, finalPaths);
+                boolean isExist = new SftpUtil().isExist(this.user, this.password, this.host, this.port, path, pathSuffix,bussinessPrefix, finalPaths);
                 if(!isExist) {
                     logger.warn("Under path " + path  +  ", pathSuffix " + pathSuffix + " doesn't exist.");
                 }else{

@@ -6,7 +6,6 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +34,12 @@ public class SftpUtil {
         JSch jsch = new JSch(); // 创建JSch对象
         // 根据用户名，主机ip，端口获取一个Session对象
         session = jsch.getSession(username, host, Integer.valueOf(port));
-        log.info("Session created...");
+        log.info("Session created ,go to connect...");
         if (password != null) {
             session.setPassword(password); // 设置密码
         }
         Properties config = new Properties();
+        config.put("kex", "diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256");
         config.put("StrictHostKeyChecking", "no");
         session.setConfig(config); // 为Session对象设置properties
         session.setTimeout(timeout); // 设置timeout时间
@@ -49,6 +49,7 @@ public class SftpUtil {
         channel.connect(); // 建立SFTP通道的连接
         log.info("Connected successfully to ip :{}, ftpUsername is :{}, return :{}",
                 host,username, channel);
+        System.out.println("connect suceess ....");
         return (ChannelSftp) channel;
     }
 
@@ -65,7 +66,7 @@ public class SftpUtil {
         }
     }
 
-    public boolean isExist(String username,String password,String host,String port, String path, String pathSuffix, Map<ChannelSftp.LsEntry,String> finalEntrys){
+    public boolean isExist(String username,String password,String host,String port, String path, String pathSuffix, String bussinessPrefix, Map<ChannelSftp.LsEntry,String> finalEntrys){
         ChannelSftp channelSftp = null;
         try {
             // 一、 获取channelSftp对象
@@ -88,10 +89,12 @@ public class SftpUtil {
                         if(!oldPath.endsWith("/")){
                             oldPath = oldPath + "/";
                         }
+                        if(bussinessPrefix == null)
+                            bussinessPrefix = "";
                         Enumeration elements = dir.elements();
                         while(elements.hasMoreElements()){
                             ChannelSftp.LsEntry lsEntry = (ChannelSftp.LsEntry)elements.nextElement();
-                            if(!lsEntry.getFilename().equals(".") && !lsEntry.getFilename().equals("..") && lsEntry.getFilename().endsWith(pathSuffix)) {
+                            if(!lsEntry.getFilename().equals(".") && !lsEntry.getFilename().equals("..") && lsEntry.getFilename().startsWith(bussinessPrefix) && lsEntry.getFilename().endsWith(pathSuffix)) {
                                 finalEntrys.put(lsEntry, oldPath + lsEntry.getFilename());
                             }
                         }
@@ -152,7 +155,7 @@ public class SftpUtil {
                     }
                 }
             } catch (SftpException e) { // 如果dstDirPath不存在，则会报错，此时捕获异常并创建dstDirPath路径
-                log.error("checkSpecialed dstPath "+file+" doesn't exist", e);
+                log.error("checkSpecialed dstPath "+file+" doesn't exist : " + e.getMessage());
                 return null;
             }
         }catch (Exception e){
@@ -204,32 +207,18 @@ public class SftpUtil {
     public static void main(String[] args){
         SftpUtil sftp = new SftpUtil();
         Map<ChannelSftp.LsEntry,String> finalPaths = new HashMap<ChannelSftp.LsEntry,String>();
-        sftp.checkSpecialed("merce", "merce", "info2", "22","/home/merce/2020-06-14/*.chk");
-
-        sftp.isExist("merce", "merce", "info2", "22", "/home/merce/20200521", ".csv", finalPaths);
-        List<ChannelSftp.LsEntry> fileList = new ArrayList<ChannelSftp.LsEntry>(finalPaths.keySet());
-        Collections.sort(fileList, new Comparator<ChannelSftp.LsEntry>(){
-            @Override
-            public int compare(ChannelSftp.LsEntry file1, ChannelSftp.LsEntry file2) {
-                if(file1.getAttrs().getMTime() < file2.getAttrs().getMTime()){
-                    return -1;
-                }else if(file1.getAttrs().getMTime()== file2.getAttrs().getMTime()){
-                    return 0;
-                }else{
-                    return 1;
-                }
-            }
-        });
-
-        int start = 0;
-        int lastEmit = -1;
-        if (lastEmit > -1) {
-            start = lastEmit + 1;
+        try{
+            sftp.checkSpecialed("root", "123456", "192.168.1.188", "22","/root/ftp_617/2020-06-14/*.chk");
+        }catch (Exception e){
+            e.printStackTrace();
         }
-        int end = fileList.size(); // keep last one
-        if (end > start) {
-            List<ChannelSftp.LsEntry> toEmit = fileList.subList(start, end);
-            lastEmit = end - 1;
+
+        System.out.println("=====================分割线================");
+
+        try{
+            sftp.checkSpecialed("root", "merce@inforefiner", "192.168.1.189", "22","/root/ftp_617/2020-06-14/*.chk");
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 }
